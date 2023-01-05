@@ -6,7 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class Differ {
 
@@ -23,38 +26,42 @@ public class Differ {
     }
 
     private static Map<String, Object> getData(String content) throws Exception {
+        if (content.isEmpty()) {
+            return new HashMap<>();
+        }
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(content, new TypeReference<>() {
         });
     }
 
     private static String getDifference(Map<String, Object> map1, Map<String, Object> map2) {
-        String result = "{\n";
+        StringBuilder sb = new StringBuilder("{\n");
         Set<String> keySet = new TreeSet<>(map1.keySet());
         keySet.addAll(map2.keySet());
         for (String key : keySet) {
             if (map1.containsKey(key) && map2.containsKey(key)) {
                 if (map1.get(key).equals(map2.get(key))) {
 
-                    result = result + "   " + key + ": " + map1.get(key) + "\n";
+                    sb.append("    ").append(key).append(": ").append(map1.get(key)).append("\n");
                 } else {
 
-                    result = result + " - " + key + ": " + map1.get(key) + "\n";
-                    result = result + " + " + key + ": " + map2.get(key) + "\n";
+                    sb.append("  - ").append(key).append(": ").append(map1.get(key)).append("\n");
+                    sb.append("  + ").append(key).append(": ").append(map2.get(key)).append("\n");
 
                 }
             } else if (map1.containsKey(key) && !map2.containsKey(key)) {
 
-                result = result + " - " + key + ": " + map1.get(key) + "\n";
+                sb.append("  - ").append(key).append(": ").append(map1.get(key)).append("\n");
 
             } else if (!map1.containsKey(key) && map2.containsKey(key)) {
 
-                result = result + " + " + key + ": " + map2.get(key) + "\n";
+                sb.append("  + ").append(key).append(": ").append(map2.get(key)).append("\n");
 
             }
 
 
         }
-        return result + "}";
+        sb.append("}");
+        return sb.toString();
     }
 }
